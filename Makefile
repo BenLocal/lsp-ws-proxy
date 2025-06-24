@@ -16,4 +16,4 @@ run:
 # 打包二进制文件
 package:
 	mkdir -p dist
-	cp target/$(TARGET)/release/lsp-ws-proxy dist/
+	cp target/$(TARGET)/release/lsp-ws-proxy build/

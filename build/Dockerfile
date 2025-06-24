@@ -1,18 +1,20 @@
-FROM alpine:3.21.3
+FROM debian:bullseye-slim
 
-RUN sed -i 's#https\?://dl-cdn.alpinelinux.org/alpine#https://mirror.nju.edu.cn/alpine#g' /etc/apk/repositories && \
-    cat /etc/apk/repositories   
+RUN sed -i 's|http://deb.debian.org/debian|https://mirrors.nju.edu.cn/debian|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.debian.org/debian-security|https://mirrors.nju.edu.cn/debian-security|g' /etc/apt/sources.list
 
-RUN apk update && \
-    apk add --no-cache clang17 \
-    clang17-extra-tools
-   
-COPY entrypoint.sh /entrypoint.sh
+RUN apt update && \
+    apt-get install clangd-12 && \
+    apt-get clean
+
+RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
+
+ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /work
 
-COPY ../target/x86_64-unknown-linux-musl/release/lsp-ws-proxy /work/lsp-ws-proxy
+ADD lsp-ws-proxy /work/lsp-ws-proxy
 RUN chmod +x /work/lsp-ws-proxy
 
 ENTRYPOINT ["/entrypoint.sh"]
