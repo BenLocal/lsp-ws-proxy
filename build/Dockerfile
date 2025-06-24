@@ -1,10 +1,16 @@
 FROM debian:bullseye-slim
 
-RUN sed -i 's|http://deb.debian.org/debian|https://mirrors.nju.edu.cn/debian|g' /etc/apt/sources.list && \
-    sed -i 's|http://security.debian.org/debian-security|https://mirrors.nju.edu.cn/debian-security|g' /etc/apt/sources.list
+RUN sed -i 's#http://deb.debian.org#http://mirror.nju.edu.cn#g' /etc/apt/sources.list
 
-RUN apt update && \
-    apt-get install clangd-12 && \
+# LLVM apt repository
+RUN apt-get update && \
+    apt-get install -y wget gnupg && \
+    wget https://apt.llvm.org/llvm-snapshot.gpg.key && \
+    apt-key add llvm-snapshot.gpg.key && \
+    echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-12 main" >> /etc/apt/sources.list && \
+    apt-get update
+
+RUN apt-get install -y clangd-12 && \
     apt-get clean
 
 RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
