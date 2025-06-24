@@ -10,7 +10,8 @@ RUN apt-get update && \
     echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-12 main" >> /etc/apt/sources.list && \
     apt-get update
 
-RUN apt-get install -y clangd-12 && \
+RUN apt-get install -y clangd-12 \
+    clang-format-12 clang-tidy-12 && \
     apt-get clean
 
 RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
