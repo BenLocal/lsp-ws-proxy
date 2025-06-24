@@ -9,18 +9,19 @@ use nom::{
     bytes::streaming::{is_not, tag, take_until},
     character::streaming::{char, crlf, digit1, space0},
     combinator::{map, map_res, opt},
+    error::Error,
     multi::length_data,
-    sequence::{delimited, terminated, tuple},
-    IResult,
+    sequence::{delimited, terminated},
+    IResult, Parser as _,
 };
 
 // Get JSON message from input using the Content-Length header.
-pub fn parse_message(input: &[u8]) -> IResult<&[u8], &[u8]> {
+pub fn parse_message(input: &[u8]) -> IResult<&[u8], &[u8], Error<&[u8]>> {
     let content_len = delimited(tag("Content-Length: "), digit1, crlf);
 
     let utf8 = alt((tag("utf-8"), tag("utf8")));
-    let charset = tuple((char(';'), space0, tag("charset="), utf8));
-    let content_type = tuple((tag("Content-Type: "), is_not(";\r"), opt(charset), crlf));
+    let charset = (char(';'), space0, tag("charset="), utf8);
+    let content_type = (tag("Content-Type: "), is_not(";\r"), opt(charset), crlf);
 
     let header = terminated(terminated(content_len, opt(content_type)), crlf);
 
@@ -28,11 +29,11 @@ pub fn parse_message(input: &[u8]) -> IResult<&[u8], &[u8]> {
     let length = map_res(header, |s: &str| s.parse::<usize>());
     let mut message = length_data(length);
 
-    message(input)
+    message.parse(input)
 }
 
-pub fn find_next_message(input: &[u8]) -> IResult<&[u8], usize> {
-    map(take_until("Content-Length"), |s: &[u8]| s.len())(input)
+pub fn find_next_message(input: &[u8]) -> IResult<&[u8], usize, Error<&[u8]>> {
+    map(take_until("Content-Length"), |s: &[u8]| s.len()).parse(input)
 }
 
 #[cfg(test)]
