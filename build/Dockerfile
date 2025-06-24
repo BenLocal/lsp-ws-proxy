@@ -11,7 +11,7 @@ RUN apt-get update && \
     apt-get update
 
 RUN apt-get install -y clangd-12 \
-    clang-format-12 clang-tidy-12 && \
+    clang && \
     apt-get clean
 
 RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
