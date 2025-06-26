@@ -8,7 +8,7 @@ use tokio::{fs, process::Command};
 use url::Url;
 use warp::{Filter, Rejection, Reply};
 
-use crate::lsp;
+use crate::{config::Config, lsp};
 
 use super::with_context;
 
@@ -22,6 +22,8 @@ pub struct Context {
     pub remap: bool,
     /// Project root.
     pub cwd: Url,
+    /// config
+    pub config: Option<Config>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -76,26 +78,40 @@ async fn on_upgrade(socket: warp::ws::WebSocket, ctx: Context, query: Option<Que
     tracing::info!("disconnected");
 }
 
+fn get_command<'a>(ctx: &'a Context, query: &'a Option<Query>) -> Option<&'a Vec<String>> {
+    if let Some(query) = query {
+        if let Some(config) = &ctx.config {
+            if let Some(servers) = &config.servers {
+                if let Some(sc) = servers.get(&query.name) {
+                    return Some(&sc.command);
+                }
+            }
+        }
+
+        if let Some(command) = ctx.commands.iter().find(|v| v[0] == query.name) {
+            Some(command)
+        } else {
+            let not_found_error = &ctx.config.as_ref().map_or(false, |c| c.not_found_error);
+            if *not_found_error {
+                None
+            } else {
+                tracing::warn!("no command found for {:?}, using the first one", query);
+                ctx.commands.first()
+            }
+        }
+    } else {
+        ctx.commands.first()
+    }
+}
+
 #[tracing::instrument(level = "debug", skip(ws, ctx), fields(remap = %ctx.remap, sync = %ctx.sync))]
 async fn connected(
     ws: warp::ws::WebSocket,
     ctx: Context,
     query: Option<Query>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let command = if let Some(query) = query {
-        if let Some(command) = ctx.commands.iter().find(|v| v[0] == query.name) {
-            command
-        } else {
-            // TODO Validate this earlier and reject, or close immediately.
-            tracing::warn!(
-                "Unknown Language Server '{}', falling back to the default",
-                query.name
-            );
-            &ctx.commands[0]
-        }
-    } else {
-        &ctx.commands[0]
-    };
+    let command =
+        get_command(&ctx, &query).ok_or_else(|| format!("no command found for {:?}", query))?;
     tracing::info!("starting {} in {}", command[0], ctx.cwd);
     let mut server = Command::new(&command[0])
         .args(&command[1..])

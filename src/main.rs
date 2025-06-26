@@ -1,10 +1,13 @@
-use std::net::SocketAddr;
+use std::{io::BufReader, net::SocketAddr};
 
 use argh::FromArgs;
 use url::Url;
 use warp::{http, Filter};
 
+use crate::config::Config;
+
 mod api;
+mod config;
 mod lsp;
 
 #[derive(FromArgs)]
@@ -48,6 +51,9 @@ struct Options {
     /// show version and exit
     #[argh(switch, short = 'v')]
     version: bool,
+    /// path to config file path
+    #[argh(option, short = 'c')]
+    config: Option<String>,
 }
 
 #[tokio::main]
@@ -56,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_env_filter(std::env::var("RUST_LOG").unwrap_or_else(|_| "info".to_owned()))
         .init();
 
-    let (opts, commands) = get_opts_and_commands();
+    let (opts, commands, config) = get_opts_and_commands();
 
     let cwd = std::env::current_dir()?;
     // TODO Move these to `api` module.
@@ -71,6 +77,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         sync: opts.sync,
         remap: opts.remap,
         cwd: Url::from_directory_path(&cwd).expect("valid url from current dir"),
+        config: config,
     });
     let healthz = warp::path::end().and(warp::get()).map(|| "OK");
     let addr = opts.listen.parse::<SocketAddr>().expect("valid addr");
@@ -91,7 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn get_opts_and_commands() -> (Options, Vec<Vec<String>>) {
+fn get_opts_and_commands() -> (Options, Vec<Vec<String>>, Option<Config>) {
     let args: Vec<String> = std::env::args().collect();
     let splitted: Vec<Vec<String>> = args.split(|s| *s == "--").map(|s| s.to_vec()).collect();
     let strs: Vec<&str> = splitted[0].iter().map(|s| s.as_str()).collect();
@@ -116,7 +123,23 @@ fn get_opts_and_commands() -> (Options, Vec<Vec<String>>) {
     }
 
     let commands = splitted[1..].iter().map(|s| s.to_owned()).collect();
-    (opts, commands)
+
+    let config = if let Some(config) = &opts.config {
+        Some(read_config_from_file(config).unwrap_or_else(|e| {
+            panic!("Failed to read config file '{}': {}", config, e);
+        }))
+    } else {
+        None
+    };
+
+    (opts, commands, config)
+}
+
+fn read_config_from_file(file_path: &str) -> Result<Config, String> {
+    let file = std::fs::File::open(file_path).map_err(|e| e.to_string())?;
+    let reader = BufReader::new(file);
+    let u = serde_json::from_reader(reader).map_err(|e| e.to_string())?;
+    Ok(u)
 }
 
 fn parse_listen(value: &str) -> Result<String, String> {

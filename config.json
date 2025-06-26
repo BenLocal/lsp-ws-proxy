@@ -1,0 +1,8 @@
+{
+    "not_found_error": true,
+    "servers": {
+        "rust": {
+            "command": ["rust-analyzer"]
+        }
+    }
+}
