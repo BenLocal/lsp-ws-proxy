@@ -44,7 +44,7 @@ RUN apt-get update && \
 # ENV PATH="/root/.cargo/bin:${PATH}"
 
 # install pylyzer
-RUN pip3 install pylyzer -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip3 install --no-cache-dir pylyzer -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # install jdts
 RUN wget http://172.31.169.114:1234/mirror/lsp/jdt-language-server-1.47.0-202505151856.tar.gz -O /tmp/jdt-language-server.tar.gz && \
