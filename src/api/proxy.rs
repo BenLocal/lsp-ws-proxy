@@ -1,9 +1,6 @@
 use std::{convert::Infallible, process::Stdio, str::FromStr};
 
-use futures_util::{
-    future::{select, Either},
-    stream, SinkExt, StreamExt,
-};
+use futures_util::{stream, SinkExt, StreamExt};
 use tokio::{fs, process::Command};
 use url::Url;
 use warp::{Filter, Rejection, Reply};
@@ -138,15 +135,14 @@ async fn connected(
     );
     let mut client_recv = stream::select(client_recv, ticks).boxed();
 
-    let mut client_msg = client_recv.next();
-    let mut server_msg = server_recv.next();
+    // let mut client_msg = client_recv.next();
+    // let mut server_msg = server_recv.next();
     // Keeps track if `pong` was received since sending the last `ping`.
     let mut is_alive = true;
 
     loop {
-        match select(client_msg, server_msg).await {
-            // From Client
-            Either::Left((from_client, p_server_msg)) => {
+        tokio::select! {
+            from_client = client_recv.next() => {
                 match from_client {
                     // Valid LSP message
                     Some(Ok(Message::Message(mut msg))) => {
@@ -210,13 +206,8 @@ async fn connected(
                         unreachable!("should never yield None");
                     }
                 }
-
-                client_msg = client_recv.next();
-                server_msg = p_server_msg;
             }
-
-            // From Server
-            Either::Right((from_server, p_client_msg)) => {
+            from_server = server_recv.next() => {
                 match from_server {
                     // Serialized LSP Message
                     Some(Ok(text)) => {
@@ -249,9 +240,6 @@ async fn connected(
                         break;
                     }
                 }
-
-                client_msg = p_client_msg;
-                server_msg = server_recv.next();
             }
         }
     }
