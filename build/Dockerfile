@@ -1,6 +1,6 @@
-FROM debian:bullseye-slim
+FROM ubuntu:22.04
 
-RUN sed -i 's#http://deb.debian.org#http://mirror.nju.edu.cn#g' /etc/apt/sources.list
+RUN sed -i 's#http://archive.ubuntu.com#http://mirror.nju.edu.cn#g' /etc/apt/sources.list
 
 # LLVM apt repository
 RUN apt-get update && \
@@ -15,6 +15,44 @@ RUN apt-get install -y clangd-12 \
     apt-get clean
 
 RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
+
+# golang
+RUN wget -qO- https://dl.google.com/go/go1.20.6.linux-amd64.tar.gz | tar -C /usr/local -xz && \
+    ln -s /usr/local/go/bin/go /usr/bin/go && \
+    ln -s /usr/local/go/bin/gofmt /usr/bin/gofmt
+RUN go version
+
+# install java
+RUN apt-get install -y openjdk-21-jdk \
+    openjdk-8-jdk \
+    openjdk-17-jdk && \
+    apt-get clean
+
+RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-21-openjdk-amd64/bin/java 100 && \
+    update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+
+# install python
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    apt-get clean
+
+# install rust using rsproxy
+# RUN apt-get install -y curl
+# RUN curl --proto '=https' --tlsv1.2 -sSf https://rsproxy.cn/rustup-init.sh | sh -s -- -y --default-toolchain stable && \
+#     . $HOME/.cargo/env && \
+#     rustup show
+# ENV PATH="/root/.cargo/bin:${PATH}"
+
+# install pylyzer
+RUN pip3 install pylyzer -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# install jdts
+RUN wget http://172.31.169.114:1234/mirror/lsp/jdt-language-server-1.47.0-202505151856.tar.gz -O /tmp/jdt-language-server.tar.gz && \
+    mkdir -p /opt/jdt-language-server && \
+    tar -xzf /tmp/jdt-language-server.tar.gz -C /opt/jdt-language-server && \
+    rm /tmp/jdt-language-server.tar.gz
+ENV JDT_LANGUAGE_SERVER_HOME=/opt/jdt-language-server
+ENV PATH="${PATH}:${JDT_LANGUAGE_SERVER_HOME}/bin"
 
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
