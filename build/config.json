@@ -8,10 +8,19 @@
       "command": ["clangd"]
     },
     "java": {
-      "command": ["clangd"]
+      "command": [
+        "jdtls",
+        "-configuration",
+        "/opt/jdt-language-server/config_linux",
+        "--java-executable",
+        "/usr/lib/jvm/java-21-openjdk-amd64/bin/java"
+      ]
     },
     "python": {
-      "command": ["pylsp"]
+      "command": ["pylyzer", "--server"]
+    },
+    "sql": {
+      "command": ["sqls"]
     }
   }
 }

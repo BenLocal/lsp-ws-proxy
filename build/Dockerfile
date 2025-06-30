@@ -54,12 +54,19 @@ RUN wget http://172.31.169.114:1234/mirror/lsp/jdt-language-server-1.47.0-202505
 ENV JDT_LANGUAGE_SERVER_HOME=/opt/jdt-language-server
 ENV PATH="${PATH}:${JDT_LANGUAGE_SERVER_HOME}/bin"
 
+# install sqls
+RUN export PATH=$PATH:/usr/local/go/bin && \
+    go env -w GO111MODULE=on && \
+    go env -w GOPROXY=https://goproxy.cn,direct && \
+    go install github.com/sqls-server/sqls@latest
+
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /work
 
 ADD lsp-ws-proxy /work/lsp-ws-proxy
+ADD config.json /etc/lsp-ws-proxy/config.json
 RUN chmod +x /work/lsp-ws-proxy
 
 ENTRYPOINT ["/entrypoint.sh"]
