@@ -1,0 +1,17 @@
+{
+  "not_found_error": true,
+  "servers": {
+    "c": {
+      "command": ["clangd"]
+    },
+    "cpp": {
+      "command": ["clangd"]
+    },
+    "java": {
+      "command": ["clangd"]
+    },
+    "python": {
+      "command": ["pylsp"]
+    }
+  }
+}
