@@ -98,7 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn get_opts_and_commands() -> (Options, Vec<Vec<String>>, Option<Config>) {
+fn get_opts_and_commands() -> (Options, Option<Vec<Vec<String>>>, Option<Config>) {
     let args: Vec<String> = std::env::args().collect();
     let splitted: Vec<Vec<String>> = args.split(|s| *s == "--").map(|s| s.to_vec()).collect();
     let strs: Vec<&str> = splitted[0].iter().map(|s| s.as_str()).collect();
@@ -118,11 +118,11 @@ fn get_opts_and_commands() -> (Options, Vec<Vec<String>>, Option<Config>) {
         std::process::exit(0);
     }
 
-    if splitted.len() < 2 {
-        panic!("Command to start the server is required. See --help for examples.");
-    }
-
-    let commands = splitted[1..].iter().map(|s| s.to_owned()).collect();
+    let commands = if splitted.len() < 2 {
+        None
+    } else {
+        Some(splitted[1..].iter().map(|s| s.to_owned()).collect())
+    };
 
     let config = if let Some(config) = &opts.config {
         Some(read_config_from_file(config).unwrap_or_else(|e| {

@@ -14,9 +14,21 @@ pub struct Config {
     pub not_found_error: bool,
     // key is language name, value is the command to start the server.
     pub servers: Option<HashMap<String, ServerConfig>>,
+    // key is driver name, value is the SQL configuration.
+    // Supported drivers are: mysql, postgres, sqlite.
+    pub sql: Option<HashMap<String, SqlConfig>>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ServerConfig {
     pub command: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct SqlConfig {
+    pub host: String,
+    pub port: u16,
+    pub admin_username: String,
+    pub admin_password: String,
+    pub proto: Option<String>,
 }

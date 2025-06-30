@@ -12,7 +12,9 @@ use super::with_context;
 #[derive(Debug, Clone)]
 pub struct Context {
     /// One or more commands to start a Language Server.
-    pub commands: Vec<Vec<String>>,
+    /// If not specified, the first one is started.
+    /// Maybe use `Option<Vec<Vec<String>>>` to allow no commands.
+    pub commands: Option<Vec<Vec<String>>>,
     /// Write file on save.
     pub sync: bool,
     /// Remap relative `source://` to absolute `file://`.
@@ -84,8 +86,11 @@ fn get_command<'a>(ctx: &'a Context, query: &'a Option<Query>) -> Option<&'a Vec
                 }
             }
         }
-
-        if let Some(command) = ctx.commands.iter().find(|v| v[0] == query.name) {
+        if let Some(command) = ctx
+            .commands
+            .as_ref()
+            .and_then(|c| c.iter().find(|v| v[0] == query.name))
+        {
             Some(command)
         } else {
             let not_found_error = &ctx.config.as_ref().map_or(false, |c| c.not_found_error);
@@ -93,11 +98,11 @@ fn get_command<'a>(ctx: &'a Context, query: &'a Option<Query>) -> Option<&'a Vec
                 None
             } else {
                 tracing::warn!("no command found for {:?}, using the first one", query);
-                ctx.commands.first()
+                ctx.commands.as_ref().and_then(|c| c.first())
             }
         }
     } else {
-        ctx.commands.first()
+        ctx.commands.as_ref().and_then(|c| c.first())
     }
 }
 
@@ -140,6 +145,7 @@ async fn connected(
     // Keeps track if `pong` was received since sending the last `ping`.
     let mut is_alive = true;
 
+    let mut database = None;
     loop {
         tokio::select! {
             from_client = client_recv.next() => {
@@ -153,6 +159,12 @@ async fn connected(
                         if ctx.sync {
                             maybe_write_text_document(&msg).await?;
                         }
+
+                        database = lsp::ext::create_database_on_init(
+                            &mut msg,
+                            "sql",
+                            ctx.config.as_ref(),
+                        ).await?;
                         let text = serde_json::to_string(&msg)?;
                         tracing::debug!("-> {}", text);
                         server_send.send(text).await?;
@@ -242,6 +254,11 @@ async fn connected(
                 }
             }
         }
+    }
+
+    if let Some(mut database) = database {
+        tracing::info!("drop database: {}", database.id());
+        database.cleanup().await?;
     }
 
     Ok(())

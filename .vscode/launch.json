@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'lsp-ws-proxy'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=lsp-ws-proxy",
+                    "--package=lsp-ws-proxy"
+                ],
+                "filter": {
+                    "name": "lsp-ws-proxy",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "-c",
+                "${workspaceFolder}/build/config.json"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'lsp-ws-proxy'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=lsp-ws-proxy",
+                    "--package=lsp-ws-proxy"
+                ],
+                "filter": {
+                    "name": "lsp-ws-proxy",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

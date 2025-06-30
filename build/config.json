@@ -22,5 +22,14 @@
     "sql": {
       "command": ["sqls"]
     }
+  },
+  "sql": {
+    "mysql": {
+      "admin_username": "root",
+      "admin_password": "root",
+      "host": "localhost",
+      "port": 3306,
+      "proto": "tcp"
+    }
   }
 }
