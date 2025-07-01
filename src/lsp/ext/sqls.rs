@@ -385,7 +385,7 @@ pub async fn create_database_on_init(
                         let mut connection_config = serde_json::Map::new();
                         connection_config.insert("driver".into(), driver.into());
                         if let Some(pwd) = &db.created_password {
-                            connection_config.insert("password".into(), pwd.to_string().into());
+                            connection_config.insert("passwd".into(), pwd.to_string().into());
                         }
                         if let Some(user) = &db.created_user {
                             connection_config.insert("user".into(), user.to_string().into());
@@ -489,7 +489,7 @@ mod tests {
                     if let Some(connection_config) = options.get("connectionConfig") {
                         assert_eq!(connection_config.get("driver").unwrap(), "mysql");
                         assert!(connection_config
-                            .get("password")
+                            .get("passwd")
                             .is_some_and(|p| p.as_str().unwrap().contains("lsp_pass_")));
                         assert!(connection_config
                             .get("user")
