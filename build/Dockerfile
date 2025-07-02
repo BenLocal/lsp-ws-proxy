@@ -71,7 +71,9 @@ RUN echo "[mysqld]" > /etc/mysql/conf.d/memory.cnf && \
     echo "innodb-buffer-pool-size=16M" >> /etc/mysql/conf.d/memory.cnf && \
     echo "innodb-log-file-size=1M" >> /etc/mysql/conf.d/memory.cnf && \
     echo "innodb-flush-method=O_DIRECT" >> /etc/mysql/conf.d/memory.cnf
-ENV MYSQL_ROOT_PASSWORD=r9KWO;M08_@xcfR
+
+ARG MYSQL_ROOT_PASSWORD=r9KWO;M08_@xcfR
+ENV MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
 
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

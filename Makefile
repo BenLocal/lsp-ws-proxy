@@ -1,9 +1,10 @@
 TARGET = x86_64-unknown-linux-musl
 
-.PHONY: build
+.PHONY: build-rust
 
-build:
-	cross build --release --target $(TARGET)
+build-rust:
+	docker context use default
+	cross build --release --target $(TARGET) -vv
 	cp target/$(TARGET)/release/lsp-ws-proxy build/
 
 clean:
