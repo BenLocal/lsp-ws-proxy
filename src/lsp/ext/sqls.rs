@@ -450,6 +450,7 @@ mod tests {
                 workspace_folders: None,
                 client_info: None,
                 locale: None,
+                #[allow(warnings)]
                 root_path: None,
             },
         });
