@@ -75,6 +75,8 @@ RUN echo "[mysqld]" > /etc/mysql/conf.d/memory.cnf && \
 ARG MYSQL_ROOT_PASSWORD=r9KWO;M08_@xcfR
 ENV MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
 
+ENV PATH=$PATH:/root/go/bin
+
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
