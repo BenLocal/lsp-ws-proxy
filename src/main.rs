@@ -1,4 +1,4 @@
-use std::{io::BufReader, net::SocketAddr};
+use std::net::SocketAddr;
 
 use argh::FromArgs;
 use url::Url;
@@ -136,9 +136,13 @@ fn get_opts_and_commands() -> (Options, Option<Vec<Vec<String>>>, Option<Config>
 }
 
 fn read_config_from_file(file_path: &str) -> Result<Config, String> {
-    let file = std::fs::File::open(file_path).map_err(|e| e.to_string())?;
-    let reader = BufReader::new(file);
-    let u = serde_json::from_reader(reader).map_err(|e| e.to_string())?;
+    let raw = std::fs::read_to_string(file_path).map_err(|e| e.to_string())?;
+    let mut ctx = tera::Context::new();
+    for (k, v) in std::env::vars() {
+        ctx.insert(&k, &v);
+    }
+    let rendered = tera::Tera::one_off(&raw, &ctx, false).map_err(|e| e.to_string())?;
+    let u = serde_json::from_str(&rendered).map_err(|e| e.to_string())?;
     Ok(u)
 }
 

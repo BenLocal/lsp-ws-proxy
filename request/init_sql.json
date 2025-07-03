@@ -1,0 +1,22 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "processId": null,
+    "rootUri": "file:///your/project/path",
+    "capabilities": {
+      "textDocument": {
+        "synchronization": {
+          "didSave": true
+        }
+      }
+    },
+    "initializationOptions": {
+      "init": {
+        "driver": "mysql",
+        "initSql": "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT);"
+      }
+    }
+  }
+}

@@ -60,21 +60,6 @@ RUN export PATH=$PATH:/usr/local/go/bin && \
     go env -w GOPROXY=https://goproxy.cn,direct && \
     go install github.com/sqls-server/sqls@latest
 
-# Install MySQL
-RUN apt-get install -y mysql-server && \
-    apt-get clean
-
-# Configure MySQL to use memory storage
-RUN echo "[mysqld]" > /etc/mysql/conf.d/memory.cnf && \
-    echo "skip-networking=0" >> /etc/mysql/conf.d/memory.cnf && \
-    echo "default-storage-engine=MEMORY" >> /etc/mysql/conf.d/memory.cnf && \
-    echo "innodb-buffer-pool-size=16M" >> /etc/mysql/conf.d/memory.cnf && \
-    echo "innodb-log-file-size=1M" >> /etc/mysql/conf.d/memory.cnf && \
-    echo "innodb-flush-method=O_DIRECT" >> /etc/mysql/conf.d/memory.cnf
-
-ARG MYSQL_ROOT_PASSWORD=r9KWO;M08_@xcfR
-ENV MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-
 ENV PATH=$PATH:/root/go/bin
 
 ADD entrypoint.sh /entrypoint.sh

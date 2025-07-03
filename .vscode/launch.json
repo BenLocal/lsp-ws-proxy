@@ -41,7 +41,10 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": [
+                "-c",
+                "${workspaceFolder}/build/config.json"
+            ],
             "cwd": "${workspaceFolder}"
         }
     ]

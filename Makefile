@@ -1,4 +1,5 @@
-TARGET = x86_64-unknown-linux-musl
+#TARGET = x86_64-unknown-linux-musl
+TARGET = aarch64-unknown-linux-musl
 
 .PHONY: build-rust
 

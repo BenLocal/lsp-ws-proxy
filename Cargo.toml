@@ -38,6 +38,7 @@ sqlx = { version = "0.8.6", features = [
     "postgres",
     "sqlite",
 ] }
+tera = "1.20"
 
 [dev-dependencies]
 
