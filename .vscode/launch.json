@@ -16,9 +16,9 @@
         }
       },
       "args": ["-c", "${workspaceFolder}/build/config.json"],
-      // "env": {
-      //     ""
-      // },
+      "env": {
+        "MYSQL_ROOT_PASSWORD": "root"
+      },
       "cwd": "${workspaceFolder}"
     },
     {

@@ -385,19 +385,20 @@ pub async fn create_database_on_init(
                         let mut connection_config = serde_json::Map::new();
                         connection_config.insert("driver".into(), driver.into());
                         if let Some(pwd) = &db.created_password {
-                            connection_config.insert("passwd".into(), pwd.into());
+                            connection_config.insert("passwd".into(), pwd.as_str().into());
                         }
                         if let Some(user) = &db.created_user {
-                            connection_config.insert("user".into(), user.into());
+                            connection_config.insert("user".into(), user.as_str().into());
                         }
                         if let Some(created_database) = &db.created_database {
-                            connection_config.insert("dbName".into(), created_database.into());
+                            connection_config
+                                .insert("dbName".into(), created_database.as_str().into());
                         }
                         if let Some(proto) = &sql_config.proto {
-                            connection_config.insert("proto".into(), proto.into());
+                            connection_config.insert("proto".into(), proto.as_str().into());
                         }
-                        connection_config.insert("host", &sql_config.host.into());
-                        connection_config.insert("port", &sql_config.port.into());
+                        connection_config.insert("host".into(), sql_config.host.as_str().into());
+                        connection_config.insert("port".into(), sql_config.port.into());
                         p.initialization_options = Some(serde_json::json!({
                             "connectionConfig": connection_config,
                         }));

@@ -26,7 +26,7 @@
   "sql": {
     "mysql": {
       "admin_username": "root",
-      "admin_password": "root",
+      "admin_password": "${MYSQL_ROOT_PASSWORD}",
       "host": "lsp-mysql",
       "port": 3306,
       "proto": "tcp"
