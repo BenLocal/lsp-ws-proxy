@@ -27,6 +27,8 @@ Examples:
     -- typescript-language-server --stdio \
     -- css-languageserver --stdio \
     -- html-languageserver --stdio
+  # Use json config and choose the server with query parameter `name` when connecting.
+  lsp-ws-proxy --listen 9999 --sync --remap -c config.json
 
 Options:
   -l, --listen      address or port to listen on (default: 0.0.0.0:9999)
