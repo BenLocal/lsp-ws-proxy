@@ -324,21 +324,21 @@ impl SqlsDatabase {
     }
 }
 
-// Extract the database name from the message
-// ```json
-// {
-//   "initializationOptions": {
-//     "connectionConfig": {
-//       "alias": "alias",
-//       "driver": "mysql/sqlite/postgres",
-//       "dataSourceName": "root:root@tcp(127.0.0.1:13306)/world",
-//     },
-//     "init": {
-//       "driver": "mysql/sqlite/postgres",
-//       "initSql": "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT);",
-//     }
-// }
-// ```
+/// Extract the database name from the message
+/// ```json
+/// {
+///   "initializationOptions": {
+///     "connectionConfig": {
+///       "alias": "alias",
+///       "driver": "mysql/sqlite/postgres",
+///       "dataSourceName": "root:root@tcp(127.0.0.1:13306)/world",
+///     },
+///     "init": {
+///       "driver": "mysql/sqlite/postgres",
+///       "initSql": "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT);",
+///     }
+/// }
+/// ```
 pub async fn create_database_on_init(
     msg: &mut Message,
     name: &str,
