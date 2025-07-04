@@ -1,27 +1,28 @@
 use std::{convert::Infallible, process::Stdio, str::FromStr};
 
-use futures_util::{
-    future::{select, Either},
-    stream, SinkExt, StreamExt,
-};
+use futures_util::{stream, SinkExt, StreamExt};
 use tokio::{fs, process::Command};
 use url::Url;
 use warp::{Filter, Rejection, Reply};
 
-use crate::lsp;
+use crate::{config::Config, lsp};
 
 use super::with_context;
 
 #[derive(Debug, Clone)]
 pub struct Context {
     /// One or more commands to start a Language Server.
-    pub commands: Vec<Vec<String>>,
+    /// If not specified, the first one is started.
+    /// Maybe use `Option<Vec<Vec<String>>>` to allow no commands.
+    pub commands: Option<Vec<Vec<String>>>,
     /// Write file on save.
     pub sync: bool,
     /// Remap relative `source://` to absolute `file://`.
     pub remap: bool,
     /// Project root.
     pub cwd: Url,
+    /// config
+    pub config: Option<Config>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -76,26 +77,43 @@ async fn on_upgrade(socket: warp::ws::WebSocket, ctx: Context, query: Option<Que
     tracing::info!("disconnected");
 }
 
+fn get_command<'a>(ctx: &'a Context, query: &'a Option<Query>) -> Option<&'a Vec<String>> {
+    if let Some(query) = query {
+        if let Some(config) = &ctx.config {
+            if let Some(servers) = &config.servers {
+                if let Some(sc) = servers.get(&query.name) {
+                    return Some(&sc.command);
+                }
+            }
+        }
+        if let Some(command) = ctx
+            .commands
+            .as_ref()
+            .and_then(|c| c.iter().find(|v| v[0] == query.name))
+        {
+            Some(command)
+        } else {
+            let not_found_error = &ctx.config.as_ref().map_or(false, |c| c.not_found_error);
+            if *not_found_error {
+                None
+            } else {
+                tracing::warn!("no command found for {:?}, using the first one", query);
+                ctx.commands.as_ref().and_then(|c| c.first())
+            }
+        }
+    } else {
+        ctx.commands.as_ref().and_then(|c| c.first())
+    }
+}
+
 #[tracing::instrument(level = "debug", skip(ws, ctx), fields(remap = %ctx.remap, sync = %ctx.sync))]
 async fn connected(
     ws: warp::ws::WebSocket,
     ctx: Context,
     query: Option<Query>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let command = if let Some(query) = query {
-        if let Some(command) = ctx.commands.iter().find(|v| v[0] == query.name) {
-            command
-        } else {
-            // TODO Validate this earlier and reject, or close immediately.
-            tracing::warn!(
-                "Unknown Language Server '{}', falling back to the default",
-                query.name
-            );
-            &ctx.commands[0]
-        }
-    } else {
-        &ctx.commands[0]
-    };
+    let command =
+        get_command(&ctx, &query).ok_or_else(|| format!("no command found for {:?}", query))?;
     tracing::info!("starting {} in {}", command[0], ctx.cwd);
     let mut server = Command::new(&command[0])
         .args(&command[1..])
@@ -122,15 +140,15 @@ async fn connected(
     );
     let mut client_recv = stream::select(client_recv, ticks).boxed();
 
-    let mut client_msg = client_recv.next();
-    let mut server_msg = server_recv.next();
+    // let mut client_msg = client_recv.next();
+    // let mut server_msg = server_recv.next();
     // Keeps track if `pong` was received since sending the last `ping`.
     let mut is_alive = true;
 
+    let mut database = None;
     loop {
-        match select(client_msg, server_msg).await {
-            // From Client
-            Either::Left((from_client, p_server_msg)) => {
+        tokio::select! {
+            from_client = client_recv.next() => {
                 match from_client {
                     // Valid LSP message
                     Some(Ok(Message::Message(mut msg))) => {
@@ -141,6 +159,12 @@ async fn connected(
                         if ctx.sync {
                             maybe_write_text_document(&msg).await?;
                         }
+
+                        database = lsp::ext::create_database_on_init(
+                            &mut msg,
+                            "sql",
+                            ctx.config.as_ref(),
+                        ).await?;
                         let text = serde_json::to_string(&msg)?;
                         tracing::debug!("-> {}", text);
                         server_send.send(text).await?;
@@ -194,13 +218,8 @@ async fn connected(
                         unreachable!("should never yield None");
                     }
                 }
-
-                client_msg = client_recv.next();
-                server_msg = p_server_msg;
             }
-
-            // From Server
-            Either::Right((from_server, p_client_msg)) => {
+            from_server = server_recv.next() => {
                 match from_server {
                     // Serialized LSP Message
                     Some(Ok(text)) => {
@@ -233,11 +252,13 @@ async fn connected(
                         break;
                     }
                 }
-
-                client_msg = p_client_msg;
-                server_msg = server_recv.next();
             }
         }
+    }
+
+    if let Some(mut database) = database {
+        tracing::info!("drop database: {}", database.id());
+        database.cleanup().await?;
     }
 
     Ok(())

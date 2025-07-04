@@ -1,0 +1,35 @@
+{
+  "not_found_error": true,
+  "servers": {
+    "c": {
+      "command": ["clangd"]
+    },
+    "cpp": {
+      "command": ["clangd"]
+    },
+    "java": {
+      "command": [
+        "jdtls",
+        "-configuration",
+        "/opt/jdt-language-server/config_linux",
+        "--java-executable",
+        "/usr/lib/jvm/java-21-openjdk-amd64/bin/java"
+      ]
+    },
+    "python": {
+      "command": ["pylyzer", "--server"]
+    },
+    "sql": {
+      "command": ["sqls", "-t"]
+    }
+  },
+  "sql": {
+    "mysql": {
+      "admin_username": "root",
+      "admin_password": "${MYSQL_ROOT_PASSWORD}",
+      "host": "lsp-mysql",
+      "port": 3306,
+      "proto": "tcp"
+    }
+  }
+}

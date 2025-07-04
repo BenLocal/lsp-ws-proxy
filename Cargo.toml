@@ -16,18 +16,29 @@ argh = "0.1.4"
 bytes = "1.0.1"
 futures-util = "0.3.15"
 lsp-types = "0.89.2"
-nom = { version = "6.1.2", default-features = false, features = ["std"] }
+nom = { version = "8", default-features = false, features = ["std"] }
 serde = { version = "1.0.126", features = ["derive"] }
 serde_json = "1.0.64"
 url = "2.2.2"
 
-tokio = { version = "1.6.1", features = ["fs", "process", "macros", "rt", "rt-multi-thread", "time"] }
-tokio-util = { version = "0.6.7", features = ["codec"] }
-warp = { git = "https://github.com/kazk/warp", branch = "permessage-deflate", default-features = false, features = ["websocket"] }
+tokio = { version = "1.45.1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+warp = { git = "https://github.com/kazk/warp", branch = "permessage-deflate", default-features = false, features = [
+    "websocket",
+] }
 
-tracing = "0.1.26"
-tracing-subscriber = "0.2.18"
-thiserror = "1.0.26"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "2"
+
+uuid = { version = "1.4", features = ["v4"] }
+sqlx = { version = "0.8.6", features = [
+    "runtime-tokio-rustls",
+    "mysql",
+    "postgres",
+    "sqlite",
+] }
+shellexpand = "2.1"
 
 [dev-dependencies]
 

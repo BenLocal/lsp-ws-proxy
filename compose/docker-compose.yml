@@ -1,0 +1,25 @@
+services:
+  lsp-ws-proxy:
+    image: lsp-ws-proxy:latest
+    ports:
+      - "9999:9999"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      lsp_network:
+        aliases:
+          - lsp-ws-proxy
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      lsp_network:
+        aliases:
+          - lsp-mysql
+    restart: always
+
+
+networks:
+  lsp_network:
+    driver: bridge
