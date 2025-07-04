@@ -20,13 +20,13 @@
       "command": ["pylyzer", "--server"]
     },
     "sql": {
-      "command": ["sqls"]
+      "command": ["sqls", "-t"]
     }
   },
   "sql": {
     "mysql": {
       "admin_username": "root",
-      "admin_password": "${MYSQL_ROOT_PASSWORD}",
+      "admin_password": "root",
       "host": "lsp-mysql",
       "port": 3306,
       "proto": "tcp"

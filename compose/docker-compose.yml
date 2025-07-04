@@ -4,21 +4,19 @@ services:
     ports:
       - "9999:9999"
     environment:
-      - MYSQL_ROOT_PASSWORD=root
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./config.json:/etc/lsp-ws-proxy/config.json
     networks:
       lsp_network:
-        ipv4_address: 192.168.88.89
         aliases:
           - lsp-ws-proxy
   mysql:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: root
-    volumes:
-      - mysql_data:/var/lib/mysql
     networks:
       lsp_network:
-        ipv4_address: 192.168.88.88
         aliases:
           - lsp-mysql
     restart: always
