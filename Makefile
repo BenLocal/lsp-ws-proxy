@@ -1,12 +1,14 @@
-TARGET = x86_64-unknown-linux-musl
-#TARGET = aarch64-unknown-linux-musl
+.PHONY: build
 
-.PHONY: build-rust
+build: build-amd64 build-aarch64
 
-build-rust:
+build-amd64:
 	docker context use default
-	cross build --release --target $(TARGET) -vv
-	cp target/$(TARGET)/release/lsp-ws-proxy build/
+	cross build --release --target x86_64-unknown-linux-musl -vv
+
+build-arm64:
+	docker context use default
+	cross build --release --target aarch64-unknown-linux-musl -vv
 
 clean:
 	cross clean --target $(TARGET)
